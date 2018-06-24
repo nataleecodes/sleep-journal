@@ -1,0 +1,65 @@
+//Main div holding our entire LandingPage.js component render area
+.landingPageContainer{
+    display: flex;
+    flex-flow: row wrap;
+}
+//LandingPage.js Left div - Moon asking how user slept
+.moon{
+    //Background image
+    background-image: url("/Assets/moon.png");
+    background-repeat: no-repeat;
+    background-position-x: left;
+    height: 100vh;
+    width: calc(100% / 3);
+    //"How did you sleep last night?"
+    &__heading{
+        text-align: right;
+        width: 80%;
+        padding-top: 13%;
+    }
+}
+
+.hideSelected{
+    //Make the empty star characters invisible
+    color: transparent;
+    &__rating > &__stars:hover:before,
+    &__rating > &__stars:hover ~ &__stars:before {
+    content: "\2605";
+        position: absolute;
+        left: 0; 
+        color: gold;
+    }
+}
+
+//LandingPage.js Journal Form
+.journalForm {
+    width: calc((100% / 3) * 2);
+    background: red;
+    //Display this section of characters in reverse order, right-to-left RTL
+    //Do this to allow us to select and fill preceding stars (usually CSS selects children after)
+    &__rating {
+        unicode-bidi: bidi-override;
+        direction: rtl;
+        text-align: center;
+    }
+    //Use position relative to allow layering 2 types of star characters, outline star & filled star
+    &__rating > &__stars {
+        display: inline-block;
+        position: relative;
+        font-size: 2rem;
+    }
+    //On hover, make the empty star characters invisible
+    &__rating > &__stars:hover,
+    &__rating > &__stars:hover ~ &__stars {
+        color: transparent;
+    }
+    //On hover, cover the invisible characters w/ gold stars using position absolute
+    //Also apply this effect to stars that precede the star user is hovering over
+    &__rating > &__stars:hover:before,
+    &__rating > &__stars:hover ~ &__stars:before {
+    content: "\2605";
+        position: absolute;
+        left: 0; 
+        color: gold;
+    }
+}
