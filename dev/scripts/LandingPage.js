@@ -1,5 +1,6 @@
 import React from 'react';
 import firebase from 'firebase';
+import EntryLayout from './EntryLayout';
 
 //Configure firebase
 const config = {
@@ -18,43 +19,77 @@ class LandingPage extends React.Component {
     constructor() {
         super();
         this.state = {
-            starRating: null,
+            starRating: '',
+            starRated: false,
             date: '',
             user: '',
-            notes: ''
+            notes: '',
+            entries: []
         }
         this.handleStarClick = this.handleStarClick.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    ComponentDidMount() {
-        const dfRef = firebase.database().ref('entries');
-
+    componentDidMount() {
+        const dbRef = firebase.database().ref('entries');
         dbRef.on('value',(snapshot) => {
-            console.log(snapshot.val());
+            // console.log(snapshot.val());
             const data = snapshot.val();
-        });
+            const entriesArray = [];
 
+            for(let item in data){
+                // console.log(item);
+                // console.log( data[item] )
+                data[item].key = item;
+                entriesArray.push( data[item] )
+            }
+
+            this.setState({
+                entries: entriesArray
+            });
+        });
     }
 
     handleChange(e) {
-        //When users type in form input fields, show the letters on the screen
+        //When users type in form input fields, update the state in React
+        console.log(`target name is ${e.target.name}`);
+        console.log(`target value is ${e.target.value}`);
         this.setState({
             [e.target.name]: e.target.value
-        });
+        })
     }
 
-    handleSubmit() {
+    handleSubmit(e) {
+        e.preventDefault();
         alert("Submitted");
+
+        const entry = {
+            date: this.state.date,
+            user: this.state.user,
+            notes: this.state.notes,
+            starRating: this.state.starRating
+        };
+
+        const dbRef = firebase.database().ref('entries');
+        dbRef.push(entry);
+        this.setState({
+            date: '',
+            user: '',
+            notes: '',
+            starRating: ''
+        });
     }
 
     handleStarClick(e) {
         let starClass = e.target.classList[1];
+        let starSelected = e.target;
         console.log(starClass);
         console.log(starClass.charAt(4));
+
         this.setState({
-            starRating: starClass.charAt(4)
+            starRating: starClass.charAt(4),
+            starRated : true
         });
         //Try some inline CSS?
         // .journalForm__rating > .journalForm__stars,
@@ -70,6 +105,11 @@ class LandingPage extends React.Component {
         //number of stars each time the state is updated?
     } 
 
+    removeEntry(keyToRemove){
+        firebase.database().ref(`entries/${keyToRemove}`);
+        console.log(`The key to remove is ${keyToRemove}`);
+    }
+
     render() {
         return(
             <div className="landingPageContainer">
@@ -77,19 +117,38 @@ class LandingPage extends React.Component {
                     <h1 className="moon__heading">How did you <br></br>sleep last night?</h1>
                 </div>
                 <div className="journalForm">
-                    <div className="journalForm__rating">
-                        <span className="journalForm__stars star5" onClick={this.handleStarClick}>☆</span>
-                        <span className="journalForm__stars star4" onClick={this.handleStarClick}>☆</span>
-                        <span className="journalForm__stars star3" onClick={this.handleStarClick}>☆</span>
-                        <span className="journalForm__stars star2" onClick={this.handleStarClick}>☆</span>
-                        <span className="journalForm__stars star1" onClick={this.handleStarClick}>☆</span>
-                    </div>
+                    {(this.state.starRated === false) ?
+                        <div className="journalForm__rating">
+                            <span className="journalForm__stars star5" onClick={this.handleStarClick}>☆</span>
+                            <span className="journalForm__stars star4" onClick={this.handleStarClick}>☆</span>
+                            <span className="journalForm__stars star3" onClick={this.handleStarClick}>☆</span>
+                            <span className="journalForm__stars star2" onClick={this.handleStarClick}>☆</span>
+                            <span className="journalForm__stars star1" onClick={this.handleStarClick}>☆</span>
+                        </div>
+                    : 
+                        <p>
+                        Sleep quality: {this.state.starRating} / 5 
+                        </p>}
+                        
                     <form action="" onSubmit={this.handleSubmit}>
-                        <input type="text" name="date" placeholder="Date" onClick={this.handleChange}/>
-                        <input type="text" name="name" placeholder="Name" onClick={this.handleChange}/>
-                        <textarea name="notes" id="notes" name="notes" cols="30" rows="10" placeholder="What went well last night? What didn't? What might you try doing differently tonight?" onClick={this.handleChange}></textarea>
-                        <input type="submit" value="Submit" onSubmit={this.handleSubmit}/>
+                        <input type="text" name="date" placeholder="Date" onChange={this.handleChange} value={this.state.date}/>
+                        <input type="text" name="user" placeholder="Name" onChange={this.handleChange} value={this.state.user}/>
+                        <textarea name="notes" id="notes" name="notes" cols="30" rows="10" placeholder="What went well last night? What didn't? What might you try doing differently tonight?" onChange={this.handleChange} value={this.state.notes}></textarea>
+                        <input type="submit" value="Submit"/>
                     </form>
+                    <ul>
+                        {this.state.entries.map((entry, i) => {
+                            return <EntryLayout
+                                key={entry.key}
+                                date={entry.date}
+                                user={entry.user}
+                                notes={entry.notes}
+                                starRating={entry.starRating}
+                            /> 
+                            // <li key={`entry-${i}`}>
+                            // </li>
+                        })}
+                    </ul>
                 </div>
             </div>
         )
